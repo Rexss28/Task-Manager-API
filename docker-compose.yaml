@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Symfony Web Application
+  web:
+    image: php:8.1-apache
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+    depends_on:
+      - mysql
+    networks:
+      - task_manager_network
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: task_manager_root_password
+      MYSQL_DATABASE: task_manager_api
+      MYSQL_USER: task_manager_user
+      MYSQL_PASSWORD: task_manager_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - task_manager_mysql_data_new:/var/lib/mysql
+    networks:
+      - task_manager_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # PHPMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: task_manager_user
+      PMA_PASSWORD: task_manager_password
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - task_manager_network
+
+volumes:
+  task_manager_mysql_data_new:
+
+networks:
+  task_manager_network:
+    driver: bridge
